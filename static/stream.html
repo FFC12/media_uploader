@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Video Streaming</title>
+</head>
+
+<body>
+    <video id="localVideo" autoplay></video>
+    <button onclick="startStreaming()">Start Streaming</button>
+    <button onclick="stopStreaming()">Stop Streaming</button>
+
+    <script>
+        const localVideo = document.getElementById('localVideo');
+        let localStream;
+        let mediaRecorder;
+        let socket = new WebSocket('{{.}}');
+
+        // socket onconnect
+        socket.onopen = () => {
+            console.log('WebSocket connection opened');
+        };
+
+        // socket onclose
+        socket.onclose = () => {
+            console.log('WebSocket connection closed');
+        };
+
+        async function startStreaming() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true,
+                    mimeType: 'video/webm;codecs=h264'
+                });
+
+                localVideo.srcObject = localStream;
+
+                socket.binaryType = 'arraybuffer';
+
+                mediaRecorder = new MediaRecorder(localStream);
+
+                mediaRecorder.ondataavailable = handleDataAvailable;
+
+                mediaRecorder.onstop = () => {
+                    socket.send('EOF'); // Signal the end of the stream
+                    let extension = "webm";
+                    socket.send(extension);
+                    socket.close();
+                };
+
+                mediaRecorder.start();
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+            }
+        }
+
+        function stopStreaming() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+        }
+
+        function handleDataAvailable(event) {
+            if (event.data.size > 0) {
+                console.log('Sending chunk ' + event.data.size);
+                socket.send(event.data);
+            }
+        }
+    </script>
+</body>
+
+</html>

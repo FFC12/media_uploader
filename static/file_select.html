@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Video Streaming</title>
+</head>
+<body>
+    <input type="file" id="fileInput" />
+    <video id="videoPlayer" controls></video>
+    <button onclick="startSending()">Send</button>
+    <script>
+	const socket = new WebSocket('{{.}}');
+
+	const videoPlayer = document.getElementById('videoPlayer');
+	const chunkSize = 1024 * 16; 
+	
+	socket.binaryType = 'arraybuffer';
+	let arrayBuffer;
+	let offset = 0;
+	 
+	socket.onopen = () => {
+		console.log('WebSocket connection opened');
+	};
+
+	const fileInput = document.getElementById('fileInput');
+	fileInput.addEventListener('change', handleFileSelect);
+	
+	function handleFileSelect(event) {
+		const file = event.target.files[0];
+		if (file) {
+			const reader = new FileReader();
+	
+			reader.onload = function () {
+				arrayBuffer = reader.result;
+			};
+	
+			reader.readAsArrayBuffer(file);
+		}
+	}
+	
+	function sendNextChunk() {
+		if (offset < arrayBuffer.byteLength) {
+			console.log('Sending chunk', offset);
+			const chunk = arrayBuffer.slice(offset, offset + chunkSize);
+			socket.send(chunk);
+	
+			offset += chunkSize;
+	 
+			setTimeout(sendNextChunk, 0);
+		} else {
+			console.log("It's done");
+			socket.send('EOF');
+			// send extension of file
+			let extension = fileInput.files[0].name.split('.').pop();
+			socket.send(extension);
+			socket.close();
+		}
+	}
+	
+	function startSending() {
+		if (arrayBuffer) { 
+			sendNextChunk();
+		} else {
+			console.log('File not selected.');
+		}
+	}
+	
+	socket.onmessage = (event) => {
+		if (event.data === 'EOF') {
+			console.log('Server sent EOF. Operation has been completed');
+			socket.close();
+		}
+	};
+	
+	socket.onclose = () => { 
+		console.log('WebSocket connection closed');
+	};
+	
+	socket.onerror = (error) => {
+		console.error('WebSocket Error:', error);
+	};
+    </script>
+</body>
+</html>
