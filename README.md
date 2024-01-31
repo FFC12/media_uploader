@@ -2,6 +2,8 @@
 
 This service provides file upload operations over WebSocket and utilizes a multi-threaded architecture (more likely concurrent goroutines than threads).
 
+Note: Service does not employ any buffering mechanism to store streaming data in memory. Instead, it promptly writes incoming data directly to the file as soon as a new chunk is received. Furthermore, the future plan is to involve seamlessly streaming the data directly to the designated storage service (S3 bucket) without the use of any intermediate buffer, ensuring a continuous and efficient full-to-full transfer process. 
+
 ## Getting Started
 
 Follow the steps below to start the project. To set worker counts, edit the `workerCount` variable in the `handlers/common.go` file.
