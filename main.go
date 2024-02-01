@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 
+	_ "net/http/pprof"
+
 	handlers "github.com/media_uploader/handlers"
 )
 
@@ -22,6 +24,11 @@ func main() {
 	flag.Parse()
 
 	var err error
+
+	// Start the pprof server.
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 
 	// Parse HTML templates for streaming and file selection.
 	streamTemplate, err = template.ParseFiles("./static/stream.html")

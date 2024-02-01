@@ -21,3 +21,4 @@ copy
 # Go workspace file
 go.work
 temp/
+jmeter_install.sh

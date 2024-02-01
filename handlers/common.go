@@ -12,7 +12,7 @@ var upgrader = websocket.Upgrader{
 }
 
 // workerCount is the number of workers in the worker pool.
-var workerCount int = 3
+var workerCount int = 10
 
 // chBufferSize is the buffer size for the task channel.
 var chBufferSize int = 100

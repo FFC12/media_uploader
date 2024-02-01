@@ -88,7 +88,7 @@ func (t *FileSelectUpload) Execute() error {
 	}
 
 	// Rename the binary file to include the file format in the filename.
-	newFileName := uniqueFileName + "." + string(format)
+	newFileName := "temp/" + uniqueFileName + "." + string(format)
 	err = os.Rename("temp/"+uniqueFileName+".bin", newFileName)
 	if err != nil {
 		fmt.Println(err)
