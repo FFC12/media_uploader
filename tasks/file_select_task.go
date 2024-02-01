@@ -26,8 +26,7 @@ func (t *FileSelectUpload) Execute() error {
 	if os.IsNotExist(err) {
 		errDir := os.Mkdir("temp", 0755)
 		if errDir != nil {
-			fmt.Println(errDir)
-			return errDir
+			fmt.Println("Error:", errDir, "not critical. It keeps going.")
 		}
 	}
 
