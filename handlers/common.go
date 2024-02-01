@@ -8,7 +8,7 @@ import (
 // upgrader is a WebSocket upgrader with specified read and write buffer sizes.
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
+	WriteBufferSize: 256,
 }
 
 // workerCount is the number of workers in the worker pool.

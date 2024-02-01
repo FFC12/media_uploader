@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 	"github.com/media_uploader/core"
 )
@@ -30,8 +29,22 @@ func (t *FileSelectUpload) Execute() error {
 		}
 	}
 
+	// Read first chunk for video data
+	_, data, err := t.Conn.ReadMessage()
+	if err != nil {
+		fmt.Println("Error (while reading first chunk):", err)
+		return err
+	}
+
+	// Deserialize first chunk
+	firstChunk, err := JsonSerializer.Deserialize(data)
+	if err != nil {
+		fmt.Println("Error (while deserializing first chunk):", err)
+		return err
+	}
+
 	// Generate a unique filename using UUID.
-	uniqueFileName := uuid.New().String()
+	uniqueFileName := firstChunk.MediaId
 
 	// Create a binary file to store the uploaded data.
 	binaryFile, err := os.Create("temp/" + uniqueFileName + ".bin")
@@ -94,8 +107,14 @@ func (t *FileSelectUpload) Execute() error {
 		return err
 	}
 
+	err = t.Conn.WriteMessage(websocket.TextMessage, []byte("http://google.com"))
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
 	// Send a WebSocket close message.
-	err = t.Conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+	err = t.Conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "Upload completed"))
 	if err != nil {
 		fmt.Println(err)
 		return err

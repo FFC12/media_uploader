@@ -21,6 +21,18 @@
 	 
 	socket.onopen = () => {
 		console.log('WebSocket connection opened');
+
+		randomUid = Math.floor(Math.random() * 1000000000);
+		// send first chunk as json object
+		firstChunk = {
+			'video': true,
+			'mimeType': 'video/webm;codecs=h264',
+			// Convert randomUid to string 
+			'mediaId': randomUid.toString(),
+		}
+
+		chunkAsBytes = new TextEncoder().encode(JSON.stringify(firstChunk));
+		socket.send(chunkAsBytes);
 	};
 
 	const fileInput = document.getElementById('fileInput');
@@ -53,8 +65,7 @@
 			socket.send('EOF');
 			// send extension of file
 			let extension = fileInput.files[0].name.split('.').pop();
-			socket.send(extension);
-			socket.close();
+			socket.send(extension); 
 		}
 	}
 	
@@ -66,11 +77,8 @@
 		}
 	}
 	
-	socket.onmessage = (event) => {
-		if (event.data === 'EOF') {
-			console.log('Server sent EOF. Operation has been completed');
-			socket.close();
-		}
+	socket.onmessage = (event) => { 
+		console.log("filePath:" + event.data);
 	};
 	
 	socket.onclose = () => { 

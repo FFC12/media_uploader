@@ -58,7 +58,7 @@ func (wp *WorkPool) Start() {
 	for i := 0; i < wp.workerNum; i++ {
 		go func(id int) {
 			// Print worker id when starting
-			fmt.Printf("Worker %d started\n", id)
+			fmt.Printf("Worker %d spawned\n", id)
 			defer wp.wg.Done()
 			for task := range wp.taskCh {
 				task.Execute()
