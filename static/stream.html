@@ -21,7 +21,18 @@
         // socket onconnect
         socket.onopen = () => {
             console.log('WebSocket connection opened');
+        };
 
+        // socket onclose
+        socket.onclose = () => {
+            console.log('WebSocket connection closed');
+        };
+
+        socket.onmessage = (event) => { 
+            console.log("filePath:" + event.data);
+        };
+
+        function sendFirstChunk() {  
             randomUid = Math.floor(Math.random() * 1000000000);
             // send first chunk as json object
             firstChunk = {
@@ -33,16 +44,7 @@
 
             chunkAsBytes = new TextEncoder().encode(JSON.stringify(firstChunk));
             socket.send(chunkAsBytes);
-        };
-
-        // socket onclose
-        socket.onclose = () => {
-            console.log('WebSocket connection closed');
-        };
-
-        socket.onmessage = (event) => { 
-            console.log("filePath:" + event.data);
-        };
+        }
 
         async function startStreaming() {
             try {
@@ -60,12 +62,10 @@
                 mediaRecorder.ondataavailable = handleDataAvailable;
 
                 mediaRecorder.onstop = () => {
-                    socket.send('EOF'); // Signal the end of the stream
-                    let extension = "webm";
-
-                    // receive message from server 
-                    socket.send(extension);
+                    socket.send('EOF');  
                 };
+
+                sendFirstChunk();
 
                 mediaRecorder.start();
             } catch (error) {

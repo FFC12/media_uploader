@@ -18,22 +18,26 @@
 	socket.binaryType = 'arraybuffer';
 	let arrayBuffer;
 	let offset = 0;
+	let mimeType = '';
 	 
 	socket.onopen = () => {
-		console.log('WebSocket connection opened');
+		console.log('WebSocket connection opened'); 
+	};
 
+	function sendFirstChunk() { 
 		randomUid = Math.floor(Math.random() * 1000000000);
+
 		// send first chunk as json object
 		firstChunk = {
 			'video': true,
-			'mimeType': 'video/webm;codecs=h264',
+			'mimeType': mimeType,
 			// Convert randomUid to string 
 			'mediaId': randomUid.toString(),
 		}
 
 		chunkAsBytes = new TextEncoder().encode(JSON.stringify(firstChunk));
 		socket.send(chunkAsBytes);
-	};
+	}
 
 	const fileInput = document.getElementById('fileInput');
 	fileInput.addEventListener('change', handleFileSelect);
@@ -47,6 +51,8 @@
 				arrayBuffer = reader.result;
 			};
 	
+			mimeType = file.type;
+			sendFirstChunk();
 			reader.readAsArrayBuffer(file);
 		}
 	}
@@ -62,10 +68,7 @@
 			setTimeout(sendNextChunk, 0);
 		} else {
 			console.log("It's done");
-			socket.send('EOF');
-			// send extension of file
-			let extension = fileInput.files[0].name.split('.').pop();
-			socket.send(extension); 
+			socket.send('EOF'); 
 		}
 	}
 	

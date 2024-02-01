@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gorilla/websocket"
 	"github.com/media_uploader/core"
@@ -92,15 +93,11 @@ func (t *FileSelectUpload) Execute() error {
 		}
 	}
 
-	// Read the file format from the connection.
-	_, format, err := t.Conn.ReadMessage()
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
+	mimeType := strings.Split(firstChunk.MimeType, "/")[1]
+	extension := strings.Split(mimeType, ";")[0]
 
 	// Rename the binary file to include the file format in the filename.
-	newFileName := "temp/" + uniqueFileName + "." + string(format)
+	newFileName := "temp/" + uniqueFileName + "." + extension
 	err = os.Rename("temp/"+uniqueFileName+".bin", newFileName)
 	if err != nil {
 		fmt.Println(err)
