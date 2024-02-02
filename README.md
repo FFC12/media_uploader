@@ -21,7 +21,7 @@ Follow the steps below to deploy Docker container:
     ./docker-deploy.sh
     ``` 
 
-It'll automatically build Docker image and start the project in Docker. To change configurations for command-line arguments, change it from Dockerfile (.env file can be used in the future for configuration).
+It'll automatically build Docker image and start the project in Docker. The server will use `:8080` port by default. To change configurations for command-line arguments, change it from Dockerfile (.env file can be used in the future for configuration).
 
 ## Docker
 
