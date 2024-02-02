@@ -39,8 +39,6 @@ func InitializeLogger() {
 // LogError logs an error message with file, function, and line information
 func LogError(message string, err error) {
 	log.WithFields(logrus.Fields{
-		"file":    fileInfo(),
-		"caller":  callerInfo(),
 		"error":   err,
 		"message": message,
 	}).Error("Error occurred")
@@ -49,25 +47,25 @@ func LogError(message string, err error) {
 // LogWarning logs a warning message with file, function, and line information
 func LogWarning(message string) {
 	log.WithFields(logrus.Fields{
-		"file":    fileInfo(),
-		"caller":  callerInfo(),
 		"message": message,
 	}).Warn("Warning occurred")
+}
+
+func LogDebug(message string) {
+	log.WithFields(logrus.Fields{
+		"message": message,
+	}).Debug("Debug message")
 }
 
 // LogInfo logs an info message with file, function, and line information
 func LogInfo(message string) {
 	log.WithFields(logrus.Fields{
-		"file":    fileInfo(),
-		"caller":  callerInfo(),
 		"message": message,
 	}).Info("Info message")
 } 
 
 func LogFatal(message string, err error) {
-	log.WithFields(logrus.Fields{
-		"file":    fileInfo(),
-		"caller":  callerInfo(),
+	log.WithFields(logrus.Fields{ 
 		"error":   err,
 		"message": message,
 	}).Fatal("Fatal error occurred")

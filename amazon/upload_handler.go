@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	core "github.com/media_uploader/core"
 )
 
 // Constants for AWS configuration
@@ -41,7 +42,7 @@ func StreamUploadInit(context *context.Context, mimeType, filename string) (*s3.
 		config.WithRegion("auto"),
 	)
 	if err != nil {
-		log.Fatal(err)
+		core.LogFatal("Failed to load AWS configuration", err)
 	}
 
 	// Create S3 client
@@ -61,7 +62,7 @@ func StreamUploadInit(context *context.Context, mimeType, filename string) (*s3.
 		return svc, resp, err
 	}
 
-	fmt.Println("Created multipart upload request")
+	core.LogInfo("Created multipart upload request")
 	return svc, resp, nil
 }
 
@@ -96,15 +97,14 @@ func StreamUpload(context *context.Context, svc *s3.Client, resp *s3.CreateMulti
 			}
 			_, aboErr := svc.AbortMultipartUpload(*context, aboInput)
 			if aboErr != nil {
-				println("Error(aborted): ", aboErr)
+				core.LogError("Failed to abort multipart upload", aboErr)
 				return nil, aboErr
 			}
 			return nil, err
 		}
 	}
 
-	fmt.Println("Uploaded part part number:", partNumber, "etag:", *uploadResult.ETag)
-
+	core.LogDebug(fmt.Sprintf("Uploaded part number: %d etag: %s", partNumber, *uploadResult.ETag))
 	return uploadResult, nil
 }
 
@@ -123,17 +123,18 @@ func StreamDone(context *context.Context, svc *s3.Client, resp *s3.CreateMultipa
 	// Complete multipart upload
 	output, compErr := svc.CompleteMultipartUpload(*context, compInput)
 	if compErr != nil {
-		fmt.Println("Error: (completed parts= ", len(completedParts), "): ", compErr)
+		core.LogError("Failed to complete multipart upload", compErr)
 		return "", compErr
 	}
 
 	// Print JSON output
 	json, err := json.Marshal(output)
 	if err != nil {
+		core.LogError("Failed to marshal JSON", err)
 		return "", err
 	}
 
-	fmt.Println(string(json))
+	core.LogInfo(fmt.Sprintf("Completed multipart upload: %s", string(json)))
 
 	//PATCH:
 	outputPath := "https://media.recram.com/storage" + "/" + *resp.Key
@@ -174,36 +175,14 @@ func DirectUpload(context *context.Context, mimeType, filename string, buffer []
 	}
 
 	// Upload object directly
-	resp, err := svc.PutObject(*context, input)
+	_, err = svc.PutObject(*context, input)
 	if err != nil {
 		return "", err
 	}
 
-	fmt.Println("Uploaded object successfully: ", resp)
+	absPath := "https://media.recram.com/storage" + "/" + path
 
-	return "https://media.recram.com/storage" + "/" + path, nil
-}
+	core.LogInfo(fmt.Sprintf("Uploaded object successfully: %s", absPath))
 
-// getUrlOfUploadedObject gets the URL of the uploaded object
-func getUrlOfUploadedObject(context *context.Context, svc *s3.Client, awsBucketName, filename string) (string, error) {
-	// List and get the URL of uploaded object
-	listObjectsInput := &s3.ListObjectsV2Input{
-		Bucket: aws.String(awsBucketName),
-	}
-
-	listObjectsOutput, err := svc.ListObjectsV2(*context, listObjectsInput)
-	if err != nil {
-		return "", err
-	}
-
-	fmt.Println("URLs of uploaded objects:")
-	var url string
-	for _, object := range listObjectsOutput.Contents {
-		if *object.Key == filename {
-			url = fmt.Sprintf("%s/%s", awsURL, *object.Key)
-			fmt.Println(url)
-			break
-		}
-	}
-	return url, nil
+	return absPath, nil
 }
