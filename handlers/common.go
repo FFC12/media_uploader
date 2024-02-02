@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"net/http"
+
 	"github.com/gorilla/websocket"
 	wp "github.com/media_uploader/core"
 )
@@ -9,6 +11,7 @@ import (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 256,
+	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
 // WorkerPool is a global instance of the worker pool used by handlers.
