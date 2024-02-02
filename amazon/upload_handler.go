@@ -177,7 +177,7 @@ func DirectUpload(context *context.Context, mimeType, filename string, buffer []
 
 	fmt.Println("Uploaded object successfully: ", resp)
 
-	return awsURL + "/" + path, nil
+	return "https://media.recram.com/storage" + "/" + path, nil
 }
 
 // getUrlOfUploadedObject gets the URL of the uploaded object

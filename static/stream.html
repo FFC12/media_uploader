@@ -17,6 +17,7 @@
         let localStream;
         let mediaRecorder;
         let socket = new WebSocket('{{.}}');
+        let dataAvailableTimer;
 
         // socket onconnect
         socket.onopen = () => {
@@ -28,13 +29,13 @@
             console.log('WebSocket connection closed');
         };
 
-        socket.onmessage = (event) => { 
+        socket.onmessage = (event) => {
             console.log("filePath:" + event.data);
         };
 
-        function sendFirstChunk() {  
+        function sendFirstChunk() {
             randomUid = Math.floor(Math.random() * 1000000000);
-            // send first chunk as json object
+            // send the first chunk as a JSON object
             firstChunk = {
                 'video': true,
                 'mimeType': 'video/webm;codecs=h264',
@@ -48,7 +49,7 @@
 
         async function startStreaming() {
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ 
+                localStream = await navigator.mediaDevices.getUserMedia({
                     video: true,
                     mimeType: 'video/webm;codecs=h264'
                 });
@@ -62,12 +63,17 @@
                 mediaRecorder.ondataavailable = handleDataAvailable;
 
                 mediaRecorder.onstop = () => {
-                    socket.send('EOF');  
+                    socket.send('EOF');
                 };
 
                 sendFirstChunk();
 
                 mediaRecorder.start();
+
+                // Start a timer to periodically request available data
+                dataAvailableTimer = setInterval(() => {
+                    mediaRecorder.requestData();
+                }, 1000); // Adjust the interval as needed
             } catch (error) {
                 console.error('Error accessing camera:', error);
             }
@@ -76,11 +82,14 @@
         function stopStreaming() {
             if (mediaRecorder && mediaRecorder.state !== 'inactive') {
                 mediaRecorder.stop();
+
+                // Clear the dataAvailableTimer when streaming stops
+                clearInterval(dataAvailableTimer);
             }
         }
 
         function handleDataAvailable(event) {
-            if (event.data.size > 0) { 
+            if (event.data.size > 1024) {
                 console.log('Sending chunk', event.data.size);
                 socket.send(event.data);
             }
