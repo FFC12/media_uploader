@@ -30,7 +30,7 @@ func StreamUploadInit(context *context.Context, mimeType, filename string) (*s3.
 	// Custom Endpoint Resolver for Cloudflare
 	r2Resolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		return aws.Endpoint{
-			URL: fmt.Sprintf("https://%s.r2.cloudflarestorage.com", awsAccountId),
+			URL: fmt.Sprintf("https://%s.r2.cloudflarestorage.com/storage", awsAccountId),
 		}, nil
 	})
 
@@ -135,7 +135,11 @@ func StreamDone(context *context.Context, svc *s3.Client, resp *s3.CreateMultipa
 
 	fmt.Println(string(json))
 
-	return *output.Location, nil
+	//PATCH:
+	outputPath := "https://media.recram.com/storage" + "/" + *resp.Key
+	//return *output.Location, nil
+
+	return outputPath, nil
 }
 
 // DirectUpload uploads an object directly without using multipart upload
@@ -143,7 +147,7 @@ func DirectUpload(context *context.Context, mimeType, filename string, buffer []
 	// Custom Endpoint Resolver for Cloudflare
 	r2Resolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		return aws.Endpoint{
-			URL: fmt.Sprintf("https://%s.r2.cloudflarestorage.com", awsAccountId),
+			URL: fmt.Sprintf("https://%s.r2.cloudflarestorage.com/storage", awsAccountId),
 		}, nil
 	})
 
