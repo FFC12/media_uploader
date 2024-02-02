@@ -182,7 +182,5 @@ func DirectUpload(context *context.Context, mimeType, filename string, buffer []
 
 	absPath := "https://media.recram.com/storage" + "/" + path
 
-	core.LogInfo(fmt.Sprintf("Uploaded object successfully: %s", absPath))
-
 	return absPath, nil
 }
