@@ -4,71 +4,104 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
-
 	_ "net/http/pprof"
 
+	"github.com/media_uploader/core"
 	handlers "github.com/media_uploader/handlers"
 )
 
-// Command line flag to specify the HTTP service address.
-var addr = flag.String("addr", "localhost:8080", "http service address")
+var (
+	addr                      = flag.String("addr", "localhost:8080", "HTTP service address")
+	perf                      = flag.Bool("perf", false, "Enable performance testing")
+	workers                   = flag.Int("workers", 10, "Number of workers")
+	chBufferSize              = flag.Int("chBufferSize", 100, "Channel buffer size")
+	workerMemoryLimit         = flag.Uint64("workerMemoryLimit", 75, "Worker memory limit")
+	useSpawnerWithMemoryLimit = flag.Bool("useSpawnerWithMemoryLimit", true, "Use worker spawner with memory limit")
+	enableSimpleInterface     = flag.Bool("enableSimpleInterface", false, "Enable simple interface to upload files")
+	saveUploadsTemporarily    = flag.Bool("saveUploadsTemporarily", false, "Save uploaded files temporarily")
 
-// Templates for rendering HTML pages.
-var streamTemplate *template.Template
-var fileSelectTemplate *template.Template
+	streamTemplate     *template.Template
+	fileSelectTemplate *template.Template
+)
 
 func main() {
-	// Parse command line flags.
 	flag.Parse()
+
+	core.InitializeLogger()
+
+	fmt.Printf("Starting `media_uploader` at http://%s\n", *addr)
+
+	handlers.InitializeWorkerConfig(*workers, *chBufferSize, *workerMemoryLimit)
+	handlers.SaveUploadsTemporarily = *saveUploadsTemporarily
 
 	var err error
 
-	// Start the pprof server.
+	fmt.Println("enableSimpleInterface: ", *enableSimpleInterface)
+	if *perf {
+		go func() {
+			err := http.ListenAndServe("localhost:6060", nil)
+			if err != nil {
+				core.LogError("Failed to start pprof server: %s", err)
+			}
+		}()
+	}
+
+	if *enableSimpleInterface {
+		err = parseHTMLTemplates()
+		if err != nil {
+			core.LogError("Failed to parse HTML templates: %s", err)
+			return
+		}
+	}
+
+	http.HandleFunc("/upload_stream", handlers.StreamHandler)
+
+	if *enableSimpleInterface {
+		http.HandleFunc("/stream", stream)
+		http.HandleFunc("/file_select", fileSelect)
+	}
+
 	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
+		err = http.ListenAndServe(*addr, nil)
+		if err != nil {
+			core.LogFatal("Failed to start server: %s", err)
+		}
 	}()
 
-	// Parse HTML templates for streaming and file selection.
+	if !*useSpawnerWithMemoryLimit {
+		handlers.WorkerPool.Start()
+	} else {
+		handlers.WorkerSpawner.Start()
+	}
+
+	if !*useSpawnerWithMemoryLimit {
+		handlers.WorkerPool.Close()
+	} else {
+		handlers.WorkerSpawner.Close()
+	}
+}
+
+func parseHTMLTemplates() error {
+	var err error
+
 	streamTemplate, err = template.ParseFiles("./static/stream.html")
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	fileSelectTemplate, err = template.ParseFiles("./static/file_select.html")
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
-	// Start the worker pool for handling tasks.
-	handlers.WorkPool.Start()
-
-	// WebSocket endpoints for handling stream and file selection.
-	http.HandleFunc("/upload_stream", handlers.StreamHandler)
-	http.HandleFunc("/upload_select_file", handlers.FileSelectHandler)
-
-	// HTTP endpoints for rendering HTML pages.
-	http.HandleFunc("/stream", stream)
-	http.HandleFunc("/file_select", fileSelect)
-
-	// Start the HTTP server and log any errors.
-	log.Fatal(http.ListenAndServe(*addr, nil))
-
-	// Close the worker pool when the server is shutting down.
-	handlers.WorkPool.Close()
+	return nil
 }
 
-// stream is an HTTP handler that renders the stream HTML page.
 func stream(w http.ResponseWriter, r *http.Request) {
-	// Render the stream page with the WebSocket endpoint.
 	streamTemplate.Execute(w, "ws://"+r.Host+"/upload_stream")
 }
 
-// fileSelect is an HTTP handler that renders the file selection HTML page.
 func fileSelect(w http.ResponseWriter, r *http.Request) {
-	// Render the file selection page with the WebSocket endpoint.
-	fileSelectTemplate.Execute(w, "ws://"+r.Host+"/upload_select_file")
+	fileSelectTemplate.Execute(w, "ws://"+r.Host+"/upload_stream")
 }

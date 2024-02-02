@@ -5,33 +5,33 @@ import (
 	"sync"
 )
 
-// WorkPool represents a simple worker pool implementation.
-type WorkPool struct {
+// WorkerPool represents a simple worker pool implementation.
+type WorkerPool struct {
 	wg        sync.WaitGroup
 	workerNum int
 	taskCh    chan Task
 }
 
 // NewPool creates a new WorkPool with the specified number of workers and buffer size for tasks.
-func NewPool(workerNumber int, bufferSize int) *WorkPool {
-	return &WorkPool{
+func NewPool(workerNumber int, bufferSize int) *WorkerPool {
+	return &WorkerPool{
 		workerNum: workerNumber,
 		taskCh:    make(chan Task, bufferSize),
 	}
 }
 
 // Done decrements the internal WaitGroup counter.
-func (wp *WorkPool) Done() {
+func (wp *WorkerPool) Done() {
 	wp.wg.Done()
 }
 
 // Wait waits for all goroutines to finish.
-func (wp *WorkPool) Wait() {
+func (wp *WorkerPool) Wait() {
 	wp.wg.Wait()
 }
 
 // Run submits a task to the worker pool.
-func (wp *WorkPool) Run(task Task) {
+func (wp *WorkerPool) Run(task Task) {
 	wp.wg.Add(1)
 	go func(t Task) {
 		defer wp.Done()
@@ -53,7 +53,7 @@ func (wp *WorkPool) Run(task Task) {
 }
 
 // Start initializes and starts the worker pool.
-func (wp *WorkPool) Start() {
+func (wp *WorkerPool) Start() {
 	wp.wg.Add(wp.workerNum) // Increment WaitGroup for each worker
 	for i := 0; i < wp.workerNum; i++ {
 		go func(id int) {
@@ -68,13 +68,13 @@ func (wp *WorkPool) Start() {
 }
 
 // handleError is a simple function to handle errors.
-func (wp *WorkPool) handleError(err error) {
+func (wp *WorkerPool) handleError(err error) {
 	// Handle the error here
 	fmt.Println("Error:", err)
 }
 
 // Close closes the task channel and waits for all workers to finish.
-func (wp *WorkPool) Close() {
+func (wp *WorkerPool) Close() {
 	close(wp.taskCh)
 	wp.Wait() // Wait for all workers to finish before returning
 }

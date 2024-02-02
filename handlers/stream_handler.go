@@ -17,8 +17,15 @@ func StreamHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	task := &tasks.StreamUploadTask{
-		Conn: conn,
+		Conn:                   conn,
+		SaveUploadsTemporarily: SaveUploadsTemporarily,
 	}
 
-	WorkPool.Run(task)
+	WorkerPool.Run(task)
+
+	// fligramTask := &tasks.FligramStamp{
+	// 	Image: "Somethin which is not fligram",
+	// }
+
+	// WorkerPool.Run(fligramTask)
 }

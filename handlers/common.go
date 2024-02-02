@@ -11,12 +11,18 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 256,
 }
 
-// workerCount is the number of workers in the worker pool.
-var workerCount int = 10
-
-// chBufferSize is the buffer size for the task channel.
-var chBufferSize int = 100
-
-// WorkPool is a global instance of the worker pool used by handlers.
+// WorkerPool is a global instance of the worker pool used by handlers.
 // It is initialized with 10 workers and a buffer size of 100 for task channel.
-var WorkPool = wp.NewPool(workerCount, chBufferSize)
+var WorkerPool *wp.WorkerPool
+
+// WorkerSpawner is a global instance of the worker spawner with 75% memory limit based on runtime.
+// This gives us control for spawning workers based on memory usage as much as possible.
+// It's better for memory usage based workers than using a fixed number of workers (in some cases).
+var WorkerSpawner *wp.WorkerSpawnerWithMemoryLimit
+
+var SaveUploadsTemporarily = false
+
+func InitializeWorkerConfig(workerCount, chBufferSize int, memoryLimit uint64) {
+	WorkerPool = wp.NewPool(workerCount, chBufferSize)
+	WorkerSpawner = wp.NewWorkerSpawnerWithMemoryLimit(memoryLimit)
+}
