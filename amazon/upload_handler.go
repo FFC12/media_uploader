@@ -49,7 +49,7 @@ func StreamUploadInit(context *context.Context, mimeType, filename string) (*s3.
 	svc := s3.NewFromConfig(cfg)
 
 	// Set up parameters for multipart upload initialization
-	path := filename
+	path := "storage/" + filename
 	input := &s3.CreateMultipartUploadInput{
 		Bucket:      aws.String(awsBucketName),
 		Key:         aws.String(path),
@@ -137,7 +137,7 @@ func StreamDone(context *context.Context, svc *s3.Client, resp *s3.CreateMultipa
 	core.LogInfo(fmt.Sprintf("Completed multipart upload: %s", string(json)))
 
 	//PATCH:
-	outputPath := "https://media.recram.com/storage" + "/" + *resp.Key
+	outputPath := "https://media.recram.com" + "/" + *resp.Key
 	//return *output.Location, nil
 
 	return outputPath, nil
@@ -166,7 +166,7 @@ func DirectUpload(context *context.Context, mimeType, filename string, buffer []
 	svc := s3.NewFromConfig(cfg)
 
 	// Set up parameters for direct object upload
-	path := filename
+	path := "storage/" + filename
 	input := &s3.PutObjectInput{
 		Bucket:      aws.String(awsBucketName),
 		Key:         aws.String(path),
@@ -180,7 +180,7 @@ func DirectUpload(context *context.Context, mimeType, filename string, buffer []
 		return "", err
 	}
 
-	absPath := "https://media.recram.com/storage" + "/" + path
+	absPath := "https://media.recram.com" + "/" + path
 
 	return absPath, nil
 }
