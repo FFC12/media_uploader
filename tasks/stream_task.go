@@ -44,14 +44,14 @@ func (t *StreamUploadTask) Execute() error {
 	// Read first chunk for video data
 	_, data, err := t.Conn.ReadMessage()
 	if err != nil {
-		core.LogError("Error (while reading first chunk): %s", err)
+		core.LogError("Error (while reading first chunk)", err)
 		return err
 	}
 
 	// Deserialize first chunk
 	firstChunk, err := JsonSerializer.Deserialize(data)
 	if err != nil {
-		core.LogError("Error (while deserializing first chunk): %s", err)
+		core.LogError("Error (while deserializing first chunk)", err)
 		return err
 	}
 
@@ -72,7 +72,7 @@ func (t *StreamUploadTask) Execute() error {
 	if t.SaveUploadsTemporarily {
 		binaryFile, err = os.Create("temp/" + fileName)
 		if err != nil {
-			core.LogError("Error (while creating binary file): %s", err)
+			core.LogError("Error (while creating binary file)", err)
 			return err
 		}
 		defer binaryFile.Close()
@@ -106,7 +106,7 @@ func (t *StreamUploadTask) Execute() error {
 				// Check file size
 				stat, err := os.Stat("temp/" + fileName)
 				if err != nil {
-					core.LogError("Error (while checking file size): %s", err)
+					core.LogError("Error (while checking file size)", err)
 					return err
 				}
 
@@ -129,7 +129,7 @@ func (t *StreamUploadTask) Execute() error {
 		if t.SaveUploadsTemporarily {
 			_, err = binaryFile.Write(message)
 			if err != nil {
-				core.LogError("Error (while writing to binary file): %s", err)
+				core.LogError("Error (while writing to binary file)", err)
 				return err
 			}
 		}
@@ -151,7 +151,7 @@ func (t *StreamUploadTask) Execute() error {
 			if !multipartUploadFlag {
 				svc, resp, err = uploader.StreamUploadInit(&context, mimeType, fileName)
 				if err != nil {
-					core.LogError("Error (while initializing multipart upload): %s", err)
+					core.LogError("Error (while initializing multipart upload)", err)
 					return err
 				}
 				multipartUploadFlag = true

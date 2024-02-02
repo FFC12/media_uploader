@@ -42,7 +42,7 @@ func main() {
 		go func() {
 			err := http.ListenAndServe("localhost:6060", nil)
 			if err != nil {
-				core.LogError("Failed to start pprof server: %s", err)
+				core.LogError("Failed to start pprof server", err)
 			}
 		}()
 	}
@@ -50,7 +50,7 @@ func main() {
 	if *enableSimpleInterface {
 		err = parseHTMLTemplates()
 		if err != nil {
-			core.LogError("Failed to parse HTML templates: %s", err)
+			core.LogError("Failed to parse HTML templates", err)
 			return
 		}
 	}
@@ -65,7 +65,7 @@ func main() {
 	go func() {
 		err = http.ListenAndServe(*addr, nil)
 		if err != nil {
-			core.LogFatal("Failed to start server: %s", err)
+			core.LogFatal("Failed to start server", err)
 		}
 	}()
 

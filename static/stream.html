@@ -81,6 +81,7 @@
 
         function handleDataAvailable(event) {
             if (event.data.size > 0) { 
+                console.log('Sending chunk', event.data.size);
                 socket.send(event.data);
             }
         }

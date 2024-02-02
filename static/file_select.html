@@ -61,7 +61,7 @@
 	
 	function sendNextChunk() {
 		if (offset < arrayBuffer.byteLength) {
-			//console.log('Sending chunk', offset);
+			console.log('Sending chunk', offset);
 			const chunk = arrayBuffer.slice(offset, offset + chunkSize);
 			socket.send(chunk);
 	
