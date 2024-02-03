@@ -158,7 +158,10 @@ func (t *StreamUploadTask) Execute() error {
 				directUploadFlag = false
 			}
 
-			uploadResult, err := uploader.StreamUpload(&context, svc, resp, buffer, partNumber)
+			first5MbOfBuffer := buffer[:5*1024*1024]
+			// remove first 5 MB from buffer for next 5 MB
+			buffer = buffer[5*1024*1024:]
+			uploadResult, err := uploader.StreamUpload(&context, svc, resp, first5MbOfBuffer, partNumber)
 			if err != nil {
 				core.LogError("Error (while uploading part): %s", err)
 				return err
@@ -171,7 +174,6 @@ func (t *StreamUploadTask) Execute() error {
 			})
 
 			partNumber += 1
-			buffer = []byte{}
 		}
 	}
 
