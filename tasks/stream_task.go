@@ -147,6 +147,8 @@ func (t *StreamUploadTask) Execute() error {
 		// It's important to note that Goroutines have different lifetimes, and during processing,
 		// some reserved memory will be released by the Go garbage collector,
 		// especially when handling smaller uploads like the <5MB MB example.
+		// R2 does not supported the different non-trailing part sizes for multipart uploads like AWS S3.
+		// So we have to be sure that every part is exactly 5 MB.
 		if len(buffer) >= (1024*1024)*5 {
 			if !multipartUploadFlag {
 				svc, resp, err = uploader.StreamUploadInit(&context, mimeType, fileName)
